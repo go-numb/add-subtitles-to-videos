@@ -11,9 +11,12 @@ try {
     $audioname = $filename + ".aac"
     $subtitlename = $filename + ".srt"
 
-    ffmpeg -i "$filename.mp4" -vn -acodec aac -strict experimental -b:a 192k $audioname
+    # -map 0:2オプションについて
+    # ゲーム音と音声が交じると文字起こしの精度が落ちるための対策
+    # トラック2にマイクのみの音声を保存し、マイク音声のみを音声ファイルに抽出する
+    ffmpeg -i "$filename.mp4" -vn -acodec aac -strict experimental -b:a 192k -map 0:2 -y $audioname
     whisper $audioname --language Japanese
-    ffmpeg -hwaccel auto -i "$filename.mp4" -vf "subtitles=$subtitlename,format=yuv420p" -c:v h264_nvenc -preset fast -crf 23 -c:a copy "$filename with srt.mp4"
+    ffmpeg -hwaccel auto -i "$filename.mp4" -vf "subtitles=$subtitlename,format=yuv420p" -c:v h264_nvenc -preset fast -crf 23 -c:a copy -y "$filename with srt.mp4"
 }
 catch {
     Write-Host "output [ERR]: $_"
